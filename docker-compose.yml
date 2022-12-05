@@ -1,0 +1,65 @@
+version: '3.3'
+
+services:
+  nginx:
+    container_name: nginx-docker
+    build: ./docker/nginx
+    volumes:
+      - .:/app:delegated
+    ports:
+      - 80:80
+
+  php-fpm:
+    container_name: php-fpm-docker
+    build: ./docker/php-fpm
+    volumes:
+      - .:/app:delegated
+    ports:
+      - 9002:9000
+
+  php-cli:
+    container_name: php-cli-docker
+    build: ./docker/php-cli
+    volumes:
+      - .:/app:delegated
+      - composer_cache:/home/appuser/.composer/cache:delegated
+  redis:
+    container_name: redis-docker
+    image: redis:latest
+    volumes:
+      - redis_data:/data
+    ports:
+      - 6377:6379
+  mysql:
+    container_name: mysql-docker
+    build: ./docker/mysql
+    volumes:
+      - mysql_data:/var/lib/mysql:delegated
+    command: --sql_mode=""
+    environment:
+      MYSQL_USER: dev
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: docker
+      MYSQL_DATABASE: docker
+      SERVICE_NAME: mysql
+      TZ: Asia/Baku
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 3309:3306
+
+  phpmyadmin:
+    container_name: phpmyadmin-docker
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - 8022:80
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mysql
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
+  composer_cache:
+  redis_data:
